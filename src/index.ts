@@ -1,8 +1,8 @@
 import * as PIXI from "pixi.js"
 import { Obstacle, ObstacleFactory } from "./obstacles";
 import { GameConstants } from "./gameConstants";
-import { AnimatedBackground } from "./animatedBackground";
-import { AnimatedBird } from "./bird";
+import { AnimatedBackground } from "./animatedBackgroundController";
+import { AnimatedBird } from "./birdController";
 import { Sprite } from "pixi.js";
 
 let animatedBackground: AnimatedBackground;
@@ -53,10 +53,6 @@ function onAssetsLoaded() {
 
         if (obstaclesArray.length < 10)
             obstaclesArray.push(obstacleFactory.createObstacle());
-
-        animatedBackground.updateBackgroundMovement();
-
-        bird.position.y = bird.position.y + GameConstants.gravity * 2.5;
 
         app.stage.addChild(obstaclesArray[0].pipeUp);
         app.stage.addChild(obstaclesArray[0].pipeDown);

@@ -1,4 +1,4 @@
-import { Texture, Sprite, ObservablePoint, Point } from "pixi.js"
+import { Sprite } from "pixi.js"
 import { GameConstants } from "./gameConstants";
 
 export class ObstacleFactory {
