@@ -1,12 +1,6 @@
 import { Texture, TilingSprite, Ticker } from "pixi.js";
 
-
-// всичко което наследява пикси компонент да си използва собствен тикер
-//  т.е bird вътре в него си има тикер в който се прави самият джъмп като логика и гравитацията пак е в него
-// за тук отново нов тикер в който се извършва самото местене да на бекгроунда
-// препятствията и те да имат собствен тикер в който да се местят
-// да се направи клас колижън чекър в който да се изнесе логиката за колизия и само да се подават обекти, които да се проверяват
-export class AnimatedBackground extends TilingSprite {
+export class animatedBackgroundController extends TilingSprite {
     private bgX = 0;
     private ticker: Ticker;
     speed = 1;

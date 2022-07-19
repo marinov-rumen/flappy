@@ -1,18 +1,20 @@
 import * as PIXI from "pixi.js"
 import { Obstacle, ObstacleFactory } from "./obstacles";
 import { GameConstants } from "./gameConstants";
-import { AnimatedBackground } from "./animatedBackgroundController";
-import { AnimatedBird } from "./birdController";
+import { animatedBackgroundController } from "./animatedBackgroundController";
+import { AnimatedBirdController } from "./birdController";
 import { Sprite } from "pixi.js";
+import { ObstacleController } from "./obstacleController";
+import { Score } from "./Score";
 
-let animatedBackground: AnimatedBackground;
-let bird: AnimatedBird;
+let animatedBackground: animatedBackgroundController;
+let bird: AnimatedBirdController;
 let obstacleFactory: ObstacleFactory;
 let gameOverContainer: PIXI.Container;
-let score: number;
-let scoreText: PIXI.Text;
+let score: Score;
 let textStyle: PIXI.TextStyle;
 let obstaclesArray: Obstacle[];
+let obsController: ObstacleController;
 
 let app = new PIXI.Application({ backgroundColor: GameConstants.backgroundColor, width: GameConstants.gameWidth, height: GameConstants.gameHeight });
 
@@ -31,76 +33,45 @@ app.loader.add("background", "simpleSpriteSheet.json")
 
 function onAssetsLoaded() {
 
-    animatedBackground = new AnimatedBackground(PIXI.Texture.from("background.png"), GameConstants.gameWidth, GameConstants.gameHeight);
+    animatedBackground = new animatedBackgroundController(PIXI.Texture.from("background.png"), GameConstants.gameWidth, GameConstants.gameHeight);
     app.stage.addChild(animatedBackground);
 
     initObstacleFactory();
+    obsController = new ObstacleController(obstacleFactory, app);
 
-    obstaclesArray = [];
-    fillObstacleArray();
+    score = new Score();
+    score.initScore();
+    app.stage.addChild(score.points);
 
-    initScore();
-
-    bird = new AnimatedBird([
+    bird = new AnimatedBirdController([
         PIXI.Texture.from("birdDown.png"),
         PIXI.Texture.from("birdMiddle.png"),
         PIXI.Texture.from("birdUp.png")]);
 
     app.stage.addChild(bird);
-    app.ticker.add((delta) => {
 
-        checkAndRemoveObstacle();
+    window.addEventListener("keydown", jumpListener);
+    app.ticker.add(() => {
 
-        if (obstaclesArray.length < 10)
-            obstaclesArray.push(obstacleFactory.createObstacle());
-
-        app.stage.addChild(obstaclesArray[0].pipeUp);
-        app.stage.addChild(obstaclesArray[0].pipeDown);
-        app.stage.addChild(obstaclesArray[0].coin);
-
-
-        updateObstacles(delta);
-
-        if (obstaclesArray[0].pipeUp.getBounds().intersects(bird.getBounds()) ||
-            obstaclesArray[0].pipeDown.getBounds().intersects(bird.getBounds()) ||
+        if (obsController.getCurrentObstacle().pipeUp.getBounds().intersects(bird.getBounds()) ||
+            obsController.getCurrentObstacle().pipeDown.getBounds().intersects(bird.getBounds()) ||
             bird.position.y > GameConstants.gameHeight - GameConstants.birdYLimitation ||
             bird.position.y < GameConstants.birdYLimitation) {
 
             gameOver();
         }
-        if (obstaclesArray[0].coin.getBounds().intersects(bird.getBounds())) {
+        if (obsController.getCurrentObstacle().coin.getBounds().intersects(bird.getBounds())) {
 
-            obstaclesArray[0].coin.position.set(-10, 0);        
-            increaseScore();
+            obsController.getCurrentObstacle().coin.position.set(-10, 0);
+            score.increaseScore();
         }
     });
 
 }
-
-function increaseScore() {
-    score++;
-    scoreText.text = score;
-    updateScoreTextPosition();
+function jumpListener(e: KeyboardEvent) {
+    if (e.key === " ")
+        bird.jump();
 }
-
-function updateScoreTextPosition() {
-    let xPos = GameConstants.gameWidth;
-    let textWidth = scoreText.width;
-    scoreText.position.set(xPos - (textWidth + 15), 10);
-}
-
-function initScore() {
-    score = 0;
-    textStyle = new PIXI.TextStyle({
-        fontSize: 25,
-        fontWeight: "bold",
-        fill: [0xffffff]
-    })
-    scoreText = new PIXI.Text(score, textStyle);
-    scoreText.position.set(GameConstants.gameWidth - (scoreText.width + 15), 10);
-    app.stage.addChild(scoreText);
-}
-
 function gameOver() {
     gameOverContainer = new PIXI.Container();
     let gameTextSprite = new PIXI.Sprite(PIXI.Texture.from("gameText.png"));
@@ -127,33 +98,29 @@ function gameOver() {
 function onGameOverButtonDown() {
     reset();
 }
-window.addEventListener("keydown", (e) => {
-    if (e.key === " ")
-        bird.jump();
-});
+
 
 function reset() {
+//todo find a better way to reset the game
+    window.removeEventListener("keydown", jumpListener);
 
-    for (var i = app.stage.children.length - 1; i >= 0; i--) {
-        app.stage.removeChild(app.stage.children[i]);
-    };
+    app.destroy(true);
+    app = null;
 
-    app.stage.addChild(animatedBackground);
+    app = new PIXI.Application({ backgroundColor: GameConstants.backgroundColor, width: GameConstants.gameWidth, height: GameConstants.gameHeight });
 
-    bird = new AnimatedBird([
-        PIXI.Texture.from("birdDown.png"),
-        PIXI.Texture.from("birdMiddle.png"),
-        PIXI.Texture.from("birdUp.png")]);
+    document.body.appendChild(app.view);
 
-    initObstacleFactory();
-
-    obstaclesArray = [];
-    fillObstacleArray();
-
-    initScore();
-
-    app.stage.addChild(bird);
-    app.start();
+    app.loader.add("background", "simpleSpriteSheet.json")
+        .add("pipeUp", "simpleSpriteSheet.json")
+        .add("pipeDown", "simpleSpriteSheet.json")
+        .add("birdDown", "simpleSpriteSheet.json")
+        .add("birdMiddle", "simpleSpriteSheet.json")
+        .add("birdUp", "simpleSpriteSheet.json")
+        .add("gameText", "simpleSpriteSheet.json")
+        .add("overText", "simpleSpriteSheet.json")
+        .add("goldMedal", "simpleSpriteSheet.json")
+        .load(onAssetsLoaded);
 }
 
 function initObstacleFactory() {
@@ -162,29 +129,4 @@ function initObstacleFactory() {
         new Sprite(PIXI.Texture.from("goldMedal.png")));
 
     obstacleFactory = new ObstacleFactory(obstacleTemplate);
-}
-//----------------------------------------- CODE FROM OBSTACLE.TS -------------------------------------------
-
-
-function checkAndRemoveObstacle() {
-    let toRemove = obstaclesArray.find(obs => obs.pipeDown.x <= 0);
-    const index = obstaclesArray.indexOf(toRemove, 0);
-    if (index > -1) {
-        obstaclesArray.splice(index, 1);
-    }
-}
-
-function updateObstacles(delta: number) {
-    obstaclesArray.forEach(obs => {
-        obs.pipeDown.position.x -= delta / 2; //*4
-        obs.pipeUp.position.x -= delta / 2; //*4
-        obs.coin.position.x -= delta / 2; //*4
-    })
-}
-
-function fillObstacleArray() {
-
-    for (let i = 0; i < 10; i++) {
-        obstaclesArray.push(obstacleFactory.createObstacle());
-    }
 }

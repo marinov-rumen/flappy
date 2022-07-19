@@ -2,7 +2,7 @@ import { AnimatedSprite, Resource, Texture, Ticker } from "pixi.js";
 import { GameConstants } from "./gameConstants";
 
 
-export class AnimatedBird extends AnimatedSprite {
+export class AnimatedBirdController extends AnimatedSprite {
 
     private ticker: Ticker;
     constructor(textures: Texture<Resource>[] ) {
