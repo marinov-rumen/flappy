@@ -1,5 +1,6 @@
 import { Sprite } from "pixi.js"
 import { GameConstants } from "./gameConstants";
+import { v4 as uuidv4 } from 'uuid';
 
 export class ObstacleFactory {
 
@@ -22,6 +23,10 @@ export class ObstacleFactory {
 
         obstacle.coin.position.set(GameConstants.gameWidth, (obstacle.pipeUp.height + GameConstants.gapBetweenPipes / 2) - obstacle.coin.height / 2);
 
+        obstacle.coin.name = obstacle.id;
+        obstacle.pipeUp.name = obstacle.id;
+        obstacle.pipeDown.name = obstacle.id;
+
         return obstacle;
 
     }
@@ -31,10 +36,11 @@ export class Obstacle {
     pipeUp: Sprite;
     pipeDown: Sprite;
     coin: Sprite;
-
+    readonly id: string;
     constructor(pipeUp: Sprite, pipeDown: Sprite, coin: Sprite) {
         this.pipeUp = pipeUp;
         this.pipeDown = pipeDown;
         this.coin = coin;
+        this.id = uuidv4();
     }
 }

@@ -12,8 +12,6 @@ let bird: AnimatedBirdController;
 let obstacleFactory: ObstacleFactory;
 let gameOverContainer: PIXI.Container;
 let score: Score;
-let textStyle: PIXI.TextStyle;
-let obstaclesArray: Obstacle[];
 let obsController: ObstacleController;
 
 let app = new PIXI.Application({ backgroundColor: GameConstants.backgroundColor, width: GameConstants.gameWidth, height: GameConstants.gameHeight });
@@ -32,7 +30,6 @@ app.loader.add("background", "simpleSpriteSheet.json")
     .load(onAssetsLoaded);
 
 function onAssetsLoaded() {
-
     animatedBackground = new animatedBackgroundController(PIXI.Texture.from("background.png"), GameConstants.gameWidth, GameConstants.gameHeight);
     app.stage.addChild(animatedBackground);
 
@@ -63,6 +60,8 @@ function onAssetsLoaded() {
         if (obsController.getCurrentObstacle().coin.getBounds().intersects(bird.getBounds())) {
 
             obsController.getCurrentObstacle().coin.position.set(-10, 0);
+            app.stage.removeChild(obsController.getCurrentObstacle().coin);
+            
             score.increaseScore();
         }
     });
@@ -101,26 +100,17 @@ function onGameOverButtonDown() {
 
 
 function reset() {
-//todo find a better way to reset the game
-    window.removeEventListener("keydown", jumpListener);
 
-    app.destroy(true);
-    app = null;
+    app.stage.removeChild(score.points);
 
-    app = new PIXI.Application({ backgroundColor: GameConstants.backgroundColor, width: GameConstants.gameWidth, height: GameConstants.gameHeight });
+    bird.resetBirdPosition();
+    obsController.resetController();
+    score.initScore();
 
-    document.body.appendChild(app.view);
+    app.stage.addChild(score.points);
+    app.stage.removeChild(gameOverContainer);
 
-    app.loader.add("background", "simpleSpriteSheet.json")
-        .add("pipeUp", "simpleSpriteSheet.json")
-        .add("pipeDown", "simpleSpriteSheet.json")
-        .add("birdDown", "simpleSpriteSheet.json")
-        .add("birdMiddle", "simpleSpriteSheet.json")
-        .add("birdUp", "simpleSpriteSheet.json")
-        .add("gameText", "simpleSpriteSheet.json")
-        .add("overText", "simpleSpriteSheet.json")
-        .add("goldMedal", "simpleSpriteSheet.json")
-        .load(onAssetsLoaded);
+    app.start();
 }
 
 function initObstacleFactory() {

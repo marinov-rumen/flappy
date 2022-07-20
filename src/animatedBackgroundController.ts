@@ -7,13 +7,14 @@ export class animatedBackgroundController extends TilingSprite {
     constructor(texture: Texture, width: number, height: number) {
         super(texture, width, height);
         this.position.set(0, 0);
-      
+
         this.createTicker();
     }
 
+    //#region  Private Methods
     private createTicker() {
         this.ticker = new Ticker();
-        this.ticker.add(()=>{
+        this.ticker.add(() => {
             this.updateBackgroundMovement();
         });
 
@@ -23,5 +24,5 @@ export class animatedBackgroundController extends TilingSprite {
         this.bgX = this.bgX - this.speed;
         this.tilePosition.set(this.bgX, this.tilePosition.y);
     }
-
+    //#endregion
 }
